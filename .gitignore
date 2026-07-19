@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project data (large files, don't commit)
+data/raw/
+data/processed/
+data/output/*.parquet
+data/output/*.csv
+
+# Config with secrets
+.env
+config.local.yaml
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/

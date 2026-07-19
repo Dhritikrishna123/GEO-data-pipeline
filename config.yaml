@@ -1,0 +1,20 @@
+email: "your.email@example.com"  # Required by NCBI for Entrez access
+ncbi_api_key: null  # Optional: increases rate limit from 3 to 10 req/s
+
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  output_dir: "data/output"
+
+search:
+  max_results: 100
+  organism: "Homo sapiens"
+
+rate_limit:
+  entrez_delay: 0.34  # seconds between NCBI requests (3 req/s without API key)
+  geo_delay: 1.0      # seconds between GEO downloads
+  max_retries: 3
+  retry_backoff: 2.0
+
+output:
+  format: "parquet"  # "csv" or "parquet"

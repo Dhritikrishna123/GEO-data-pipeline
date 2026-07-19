@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "geo-pipeline"
+version = "0.1.0"
+description = "GEO data fetching pipeline for Pharma AI Target Discovery"
+requires-python = ">=3.10"
+dependencies = [
+    "GEOparse>=2.0.4",
+    "biopython>=1.83",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0.0",
+    "scipy>=1.12.0",
+    "numpy>=1.26.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+]
+
+[project.scripts]
+geo-pipeline = "src.pipeline:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+src = ["*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

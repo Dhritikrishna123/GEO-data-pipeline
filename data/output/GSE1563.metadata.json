@@ -1,0 +1,9 @@
+{
+  "gse_id": "GSE1563",
+  "disease": "kidney transplant",
+  "platform": [
+    "GPL8300"
+  ],
+  "n_samples": 62,
+  "n_genes": 9525
+}
