@@ -90,20 +90,25 @@ def search_gse_by_disease(
     id_list = results["IdList"]
     time.sleep(delay)
 
-    # Fetch summaries
+    # Fetch summaries with retries
     records = []
     for uid in id_list:
-        try:
-            with Entrez.esummary(db="gds", id=uid) as handle:
-                summary = Entrez.read(handle)
-            time.sleep(delay)
+        summary = None
+        for attempt in range(1, config.rate_limit.max_retries + 1):
+            try:
+                with Entrez.esummary(db="gds", id=uid) as handle:
+                    summary = Entrez.read(handle)
+                time.sleep(delay)
+                break
+            except Exception as e:
+                logger.warning("Attempt %d to fetch summary for UID %s failed: %s", attempt, uid, e)
+                if attempt < config.rate_limit.max_retries:
+                    time.sleep(delay * attempt)
 
+        if summary is not None:
             record = _parse_gds_summary(summary)
             if record:
                 records.append(record)
-        except Exception as e:
-            logger.warning("Failed to fetch summary for UID %s: %s", uid, e)
-            continue
 
     logger.info("Parsed %d GSE records for '%s'", len(records), disease)
     return records

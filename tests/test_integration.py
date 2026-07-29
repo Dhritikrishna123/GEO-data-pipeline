@@ -16,7 +16,7 @@ from src.pipeline import process_single_gse
 class TestIntegration:
     def test_full_gse1563(self, gse1563, gse1563_raw, gse1563_probe, gse1563_expr):
         chars = get_sample_characteristics(gse1563)
-        control, disease = extract_sample_groups(chars)
+        control, disease = extract_sample_groups(chars, disease_term="kidney transplant")
         assert len(control.samples) >= 2 and len(disease.samples) >= 2
         de = compute_de(gse1563_expr, control, disease)
         assert len(de) > 0

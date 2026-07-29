@@ -134,9 +134,17 @@ def get_sample_characteristics(gse: GEOparse.GSE) -> dict[str, list[str]]:
     for gsm_name, gsm in gse.gsms.items():
         sample_chars = []
         for key in sorted(gsm.metadata.keys()):
-            if key.startswith("characteristics_ch"):
+            if (
+                key.startswith("characteristics_ch")
+                or key.startswith("source_name_ch")
+                or key in ("title", "description")
+            ):
                 for val in gsm.metadata[key]:
-                    if val.strip():
-                        sample_chars.append(val.strip())
+                    v = val.strip()
+                    if v:
+                        v = re.sub(r"abbreviations used.*", "", v, flags=re.IGNORECASE)
+                        v = re.sub(r"keywords\s*=.*", "", v, flags=re.IGNORECASE)
+                        if v.strip():
+                            sample_chars.append(v.strip())
         chars[gsm_name] = sample_chars
     return chars

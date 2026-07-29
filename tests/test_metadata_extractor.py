@@ -43,8 +43,8 @@ class TestMetadataExtractor:
             "sample3": ["more unknown"],
             "sample4": ["yet another"],
         }
-        control, disease = extract_sample_groups(chars)
-        assert len(control.samples) + len(disease.samples) == 4
+        with pytest.raises(Exception):
+            extract_sample_groups(chars)
 
     def test_mixed_characteristics(self):
         chars = {
@@ -75,8 +75,8 @@ class TestMetadataExtractor:
             "s3": ["color: green"],
             "s4": ["color: yellow"],
         }
-        control, disease = extract_sample_groups(chars)
-        assert len(control.samples) + len(disease.samples) == 4
+        with pytest.raises(Exception):
+            extract_sample_groups(chars)
 
     def test_large_dataset(self):
         chars = {}

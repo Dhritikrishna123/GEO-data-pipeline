@@ -35,6 +35,7 @@ DISEASE_KEYWORDS = [
     "chronic myeloid", "myelodysplastic", "myelofibrosis",
     "polycythemia", "thrombocythemia", "multiple myeloma",
     "blastic", "blast crisis", "refractory", "relapsed",
+    "rejection", "dysfunction",
 ]
 
 CONTROL_KEYWORDS = [
@@ -94,29 +95,11 @@ def extract_sample_groups(
     disease_samples = [s for s, sc in disease_score.items() if sc > 0]
     uncertain_samples = [s for s, sc in disease_score.items() if sc == 0]
 
-    # Handle edge cases
-    if not disease_samples and not control_samples:
-        if len(uncertain_samples) >= 2:
-            half = len(uncertain_samples) // 2
-            control_samples = uncertain_samples[:half]
-            disease_samples = uncertain_samples[half:]
-            uncertain_samples = []
-        else:
-            raise MetadataExtractionError("Cannot classify any samples")
-    elif not disease_samples:
-        n_ctrl = len(control_samples)
-        if n_ctrl >= 3:
-            disease_samples = control_samples[:n_ctrl // 2]
-            control_samples = control_samples[n_ctrl // 2:]
-        else:
-            raise MetadataExtractionError("Not enough samples for grouping")
-    elif not control_samples:
-        n_dis = len(disease_samples)
-        if n_dis >= 3:
-            control_samples = disease_samples[:n_dis // 2]
-            disease_samples = disease_samples[n_dis // 2:]
-        else:
-            raise MetadataExtractionError("Not enough samples for grouping")
+    # Ensure both control and disease groups exist
+    if not control_samples or not disease_samples:
+        raise MetadataExtractionError(
+            f"Cannot classify samples into control and disease groups (found {len(control_samples)} control, {len(disease_samples)} disease)"
+        )
 
     # Reassign uncertain samples based on characteristics similarity
     for sample in uncertain_samples:
