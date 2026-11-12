@@ -1,4 +1,4 @@
-email: "your.email@example.com"  # Required by NCBI for Entrez access
+email: "dhriti@research.org"  # Required by NCBI for Entrez access
 ncbi_api_key: null  # Optional: increases rate limit from 3 to 10 req/s
 
 paths:
@@ -18,3 +18,18 @@ rate_limit:
 
 output:
   format: "parquet"  # "csv" or "parquet"
+
+drg:
+  # Minimum number of human DRG studies required (warn if fewer found)
+  min_human_studies: 3
+  # Minimum cells/samples per group to pass QC (null = no hard threshold)
+  min_cells_per_group: null
+  # Whether to require human-only studies
+  require_human: true
+  # Whether to require injured vs healthy labels
+  require_labels: true
+  # Canonical DRG search queries (all three are run and results deduplicated)
+  search_queries:
+    - "human dorsal root ganglion single nucleus"
+    - "DRG scRNA-seq neuropathic pain"
+    - "injured vs control DRG"

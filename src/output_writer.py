@@ -23,16 +23,22 @@ def write_output(
     output_dir: str,
     gse_id: str,
     fmt: str = "parquet",
+    raw_counts: pd.DataFrame | None = None,
 ) -> dict[str, Path]:
-    """Write expression and DE results to disk.
+    """Write expression, DE results, raw counts, and metadata to disk.
 
     Args:
         expression: Normalized expression DataFrame.
         de_results: Differential expression results.
-        metadata: Dataset metadata.
+        metadata: Dataset metadata dict.  Enriched fields (n_injured,
+            n_control, is_human, qc_passed, qc_reasons, sequencing_type)
+            are written when present.
         output_dir: Output directory path.
         gse_id: GEO accession.
         fmt: Output format ("parquet" or "csv").
+        raw_counts: Optional raw integer count DataFrame (genes x samples).
+            When provided it is written as ``{gse_id}.raw_counts.{fmt}``
+            alongside the normalized expression file.
 
     Returns:
         Dict mapping file type to output path.
@@ -52,10 +58,17 @@ def write_output(
     output_files = {}
 
     try:
-        # Write expression
+        # Write normalized expression
         expr_path = prefix.with_suffix(f".expression.{fmt}")
         _write_dataframe(expression, expr_path, fmt)
         output_files["expression"] = expr_path
+
+        # Write raw counts (Geneformer-ready integer matrix)
+        if raw_counts is not None and not raw_counts.empty:
+            raw_path = prefix.with_suffix(f".raw_counts.{fmt}")
+            _write_dataframe(raw_counts, raw_path, fmt)
+            output_files["raw_counts"] = raw_path
+            logger.info("Raw counts written: %s", raw_path)
 
         # Write DE results
         de_path = prefix.with_suffix(f".de_results.{fmt}")
@@ -74,6 +87,43 @@ def write_output(
 
     logger.info("Output files written to %s", out_path)
     return output_files
+
+
+def write_raw_counts(
+    raw_counts: pd.DataFrame,
+    output_dir: str,
+    gse_id: str,
+    fmt: str = "parquet",
+) -> Path:
+    """Write a raw count matrix to disk independently.
+
+    Convenience function for callers that have already built the raw count
+    matrix separately (e.g. from a supplementary MEX / HDF5 file).
+
+    Args:
+        raw_counts: Integer count DataFrame (genes x cells/samples).
+        output_dir: Output directory path.
+        gse_id: GEO accession used as filename prefix.
+        fmt: Output format ("parquet" or "csv").
+
+    Returns:
+        Path to the written file.
+
+    Raises:
+        OutputError: If format is invalid or write fails.
+    """
+    if fmt not in VALID_FORMATS:
+        raise OutputError(
+            f"Invalid output format {fmt!r}. Must be one of: {sorted(VALID_FORMATS)}"
+        )
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    raw_path = (out_path / gse_id).with_suffix(f".raw_counts.{fmt}")
+    _write_dataframe(raw_counts, raw_path, fmt)
+    logger.info("Raw counts written to %s", raw_path)
+    return raw_path
 
 
 def _write_dataframe(df: pd.DataFrame, path: Path, fmt: str) -> None:

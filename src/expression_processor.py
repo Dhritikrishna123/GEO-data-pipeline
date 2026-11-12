@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -98,6 +99,61 @@ def build_expression_matrix(
     if df.index.duplicated().any():
         df = df.groupby(df.index).mean()
 
+    return df
+
+
+def build_raw_counts_matrix(
+    raw_samples: dict[str, list[tuple[str, float]]],
+    probe_to_gene: dict[str, str] | None = None,
+) -> pd.DataFrame:
+    """Build a **raw integer count** matrix from sample data.
+
+    Unlike :func:`build_expression_matrix`, values are rounded to the nearest
+    integer and cast to ``int64`` so they are suitable for Geneformer training
+    without any log-transformation.  All other steps (probe mapping, duplicate
+    gene aggregation) are identical.
+
+    Args:
+        raw_samples: Dict mapping sample_name -> list of (probe_id, value) tuples.
+        probe_to_gene: Optional probe-to-gene mapping.
+
+    Returns:
+        Integer count DataFrame with genes as index, samples as columns.
+        Returns an empty DataFrame if ``raw_samples`` is empty.
+    """
+    if not raw_samples:
+        return pd.DataFrame()
+
+    # Collect all probes
+    all_probes = set()
+    for vals in raw_samples.values():
+        all_probes.update(p for p, _ in vals)
+
+    # Build matrix — keep values as raw floats first, round later
+    matrix = {}
+    for sample, vals in raw_samples.items():
+        probe_dict = dict(vals)
+        matrix[sample] = [probe_dict.get(p, np.nan) for p in all_probes]
+
+    df = pd.DataFrame(matrix, index=sorted(all_probes))
+
+    # Map probe IDs to gene symbols
+    if probe_to_gene:
+        df.index = df.index.map(lambda p: probe_to_gene.get(str(p), str(p)))
+
+    df = df[df.index != ""]
+
+    # Aggregate duplicate genes (take sum for counts — biologically correct)
+    if df.index.duplicated().any():
+        df = df.groupby(df.index).sum()
+
+    # Round to nearest integer and cast (fill NaN with 0)
+    df = df.fillna(0).round().astype("int64")
+
+    logger.info(
+        "Built raw count matrix: %d genes x %d samples",
+        len(df), len(df.columns),
+    )
     return df
 
 

@@ -1,9 +1,16 @@
 {
   "gse_id": "GSE1563",
-  "disease": "kidney transplant",
+  "study_accession": "GSE1563",
+  "disease": "neuropathic pain",
   "platform": [
     "GPL8300"
   ],
   "n_samples": 62,
-  "n_genes": 9525
+  "n_genes": 9525,
+  "n_control": 17,
+  "n_injured": 45,
+  "is_human": true,
+  "taxon": "Homo sapiens",
+  "sequencing_type": "tar",
+  "supplementary_format": "tar"
 }

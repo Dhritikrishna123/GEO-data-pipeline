@@ -1,0 +1,16 @@
+{
+  "gse_id": "GSE168243",
+  "study_accession": "GSE168243",
+  "disease": "neuropathic pain",
+  "platform": [
+    "GPL18573"
+  ],
+  "n_samples": 1837,
+  "n_genes": 1025,
+  "n_control": 0,
+  "n_injured": 0,
+  "is_human": true,
+  "taxon": "Homo sapiens",
+  "sequencing_type": "tar",
+  "supplementary_format": "tar"
+}

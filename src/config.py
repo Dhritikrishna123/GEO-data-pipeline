@@ -56,6 +56,46 @@ class OutputConfig:
             raise ValueError(f"output format must be 'parquet' or 'csv', got {self.format!r}")
 
 
+# Default DRG search queries — the three canonical evidence queries
+_DEFAULT_DRG_QUERIES = [
+    "human dorsal root ganglion single nucleus",
+    "DRG scRNA-seq neuropathic pain",
+    "injured vs control DRG",
+]
+
+
+@dataclass
+class DRGConfig:
+    """Configuration for DRG-specific disease evidence collection."""
+
+    # Minimum number of human DRG studies we expect to find across all queries.
+    # If fewer are found the pipeline warns but continues.
+    min_human_studies: int = 3
+
+    # Minimum number of cells/samples required per group (injured / control).
+    # None means no hard threshold is applied.
+    min_cells_per_group: int | None = None
+
+    # Reject non-human studies during QC.
+    require_human: bool = True
+
+    # Reject studies that lack clear injured vs. healthy labels.
+    require_labels: bool = True
+
+    # The three canonical DRG search queries.
+    search_queries: list[str] = field(default_factory=lambda: list(_DEFAULT_DRG_QUERIES))
+
+    def __post_init__(self) -> None:
+        if self.min_human_studies < 1:
+            raise ValueError(f"min_human_studies must be >= 1, got {self.min_human_studies}")
+        if self.min_cells_per_group is not None and self.min_cells_per_group < 1:
+            raise ValueError(
+                f"min_cells_per_group must be >= 1 or None, got {self.min_cells_per_group}"
+            )
+        if not self.search_queries:
+            raise ValueError("drg.search_queries must not be empty")
+
+
 @dataclass
 class PipelineConfig:
     email: str = ""
@@ -64,6 +104,7 @@ class PipelineConfig:
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
     search: SearchConfig = field(default_factory=SearchConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
+    drg: DRGConfig = field(default_factory=DRGConfig)
 
     def __post_init__(self) -> None:
         self.paths.ensure_dirs()
@@ -78,16 +119,20 @@ class PipelineConfig:
             kwargs["search"] = SearchConfig(**kwargs["search"])
         if isinstance(kwargs.get("output"), dict):
             kwargs["output"] = OutputConfig(**kwargs["output"])
+        if isinstance(kwargs.get("drg"), dict):
+            drg_data = kwargs["drg"]
+            kwargs["drg"] = DRGConfig(**drg_data)
         self.email = kwargs.get("email", "")
         self.ncbi_api_key = kwargs.get("ncbi_api_key")
         self.paths = kwargs.get("paths", PathsConfig())
         self.rate_limit = kwargs.get("rate_limit", RateLimitConfig())
         self.search = kwargs.get("search", SearchConfig())
         self.output = kwargs.get("output", OutputConfig())
+        self.drg = kwargs.get("drg", DRGConfig())
         self.paths.ensure_dirs()
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> PipelineConfig:
+    def from_yaml(cls, path: str | Path) -> "PipelineConfig":
         """Load config from a YAML file.
 
         Falls back to env vars and defaults if file not found.
@@ -115,10 +160,11 @@ class PipelineConfig:
             rate_limit=data.get("rate_limit", {}),
             search=data.get("search", {}),
             output=data.get("output", {}),
+            drg=data.get("drg", {}),
         )
 
     @classmethod
-    def from_env(cls) -> PipelineConfig:
+    def from_env(cls) -> "PipelineConfig":
         """Load config from environment variables only."""
         return cls(
             email=os.environ.get("GEO_PIPELINE_EMAIL", ""),

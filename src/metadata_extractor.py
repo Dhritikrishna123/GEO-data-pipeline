@@ -36,12 +36,21 @@ DISEASE_KEYWORDS = [
     "polycythemia", "thrombocythemia", "multiple myeloma",
     "blastic", "blast crisis", "refractory", "relapsed",
     "rejection", "dysfunction",
+    # DRG / neuropathic pain — injured side
+    "injured", "injury", "neuropathic", "neuropathy", "nerve injury",
+    "cci", "snl", "sni", "axotomy", "spared nerve",
+    "chronic constriction", "spinal nerve ligation",
+    "sciatic nerve ligation", "paclitaxel", "oxaliplatin",
+    "allodynia", "hyperalgesia", "pain",
 ]
 
 CONTROL_KEYWORDS = [
     "control", "normal", "healthy", "wild type", "wild-type", "wt",
     "untreated", "vehicle", "sham", "placebo", "baseline",
     "non-diseased", "disease-free", "remission", "recovery",
+    # DRG / neuropathic pain — uninjured / naive side
+    "naive", "naïve", "uninjured", "intact", "contralateral",
+    "ipsilateral naive", "no injury",
 ]
 
 # Patterns to match sample types (tissue, cell line, etc.)
@@ -98,7 +107,8 @@ def extract_sample_groups(
     # Ensure both control and disease groups exist
     if not control_samples or not disease_samples:
         raise MetadataExtractionError(
-            f"Cannot classify samples into control and disease groups (found {len(control_samples)} control, {len(disease_samples)} disease)"
+            f"Cannot classify samples into control and disease groups "
+            f"(found {len(control_samples)} control, {len(disease_samples)} disease)"
         )
 
     # Reassign uncertain samples based on characteristics similarity
